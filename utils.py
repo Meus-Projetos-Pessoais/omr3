@@ -61,6 +61,7 @@ for _dir in [multiMarkedPath,errorPath,badRollsPath]:
 def waitQ():
     while(cv2.waitKey(1)& 0xFF != ord('q')):pass
     cv2.destroyAllWindows()
+    exit()
 
 def normalize_util(img, alpha=0, beta=255):
     return cv2.normalize(img, alpha, beta, norm_type=cv2.NORM_MINMAX)#, dtype=cv2.CV_32F)
@@ -89,8 +90,8 @@ def resize_util_h(img, u_height, u_width=None):
 # TODO : Create class to put these into 
 marker = cv2.imread('inputs/omr_marker.jpg',cv2.IMREAD_GRAYSCALE) #,cv2.CV_8UC1/IMREAD_COLOR/UNCHANGED
 marker = resize_util(marker, int(uniform_width/templ_scale_fac))
-marker = cv2.GaussianBlur(marker, (5, 5), 0)
-marker = cv2.normalize(marker, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+marker = cv2.GaussianBlur(marker, (3,3), 0)
+#marker = cv2.normalize(marker, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
 # marker_eroded_sub = marker-cv2.erode(marker,None)
 marker_eroded_sub = marker - cv2.erode(marker, kernel=np.ones((5,5)),iterations=5)
 # lonmarkerinv = cv2.imread('inputs/omr_autorotate.jpg',cv2.IMREAD_GRAYSCALE)
@@ -109,6 +110,8 @@ def show(name,orig,pause=1,resize=False,resetpos=None):
     origDim = orig.shape[:2]
     img = resize_util(orig,display_width,display_height) if resize else orig
     cv2.imshow(name,img)
+    #plt.imshow(img)
+    #plt.show()
     if(resetpos):
         windowX=resetpos[0]
         windowY=resetpos[1]
@@ -139,7 +142,7 @@ def putLabel(img,label, size):
     pos = (int(scale*80), int(scale*30))
     clr = (255 - bgVal,)*3
     img[(pos[1]-size*30):(pos[1]+size*2), : ] = bgVal
-    cv2.putText(img,label,pos,cv2.FONT_HERSHEY_SIMPLEX, size, clr, 3)
+    #cv2.putText(img,label,pos,cv2.FONT_HERSHEY_SIMPLEX, size, clr, 3)
 
 def drawTemplateLayout(img, template, shifted=True, draw_qvals=False, border=-1):
     img = resize_util(img,template.dims[0],template.dims[1])
@@ -149,18 +152,18 @@ def drawTemplateLayout(img, template, shifted=True, draw_qvals=False, border=-1)
         s,d = QBlock.orig, QBlock.dims
         shift = QBlock.shift
         if(shifted):
-            cv2.rectangle(final_align,(s[0]+shift,s[1]),(s[0]+shift+d[0],s[1]+d[1]),CLR_BLACK,3)
+            cv2.rectangle(final_align,(s[0]+shift,s[1]),(s[0]+shift+d[0],s[1]+d[1]),(0,255,0),3)
         else:
-            cv2.rectangle(final_align,(s[0],s[1]),(s[0]+d[0],s[1]+d[1]),CLR_BLACK,3)
+            cv2.rectangle(final_align,(s[0],s[1]),(s[0]+d[0],s[1]+d[1]),(0,255,0),3)
         for qStrip, qBoxPts in QBlock.traverse_pts:
             for pt in qBoxPts:
                 x,y = (pt.x + QBlock.shift,pt.y) if shifted else (pt.x,pt.y)
-                cv2.rectangle(final_align,(int(x+boxW/10),int(y+boxH/10)),(int(x+boxW-boxW/10),int(y+boxH-boxH/10)), CLR_DARK_GRAY,border)
+                cv2.rectangle(final_align,(int(x+boxW/10),int(y+boxH/10)),(int(x+boxW-boxW/10),int(y+boxH-boxH/10)), (0,0,255),border)
                 if(draw_qvals):
                     rect = [y,y+boxH,x,x+boxW]
-                    cv2.putText(final_align,'%d'% (cv2.mean(img[  rect[0]:rect[1] , rect[2]:rect[3] ])[0]), (rect[2]+2, rect[0] + (boxH*2)//3),cv2.FONT_HERSHEY_SIMPLEX, 0.6,CLR_BLACK,2)
-        if(shifted):
-            cv2.putText(final_align,'s%s'% (shift), tuple(s - [template.dims[0]//20,-d[1]//2]),cv2.FONT_HERSHEY_SIMPLEX, TEXT_SIZE,CLR_BLACK,4)
+                    #cv2.putText(final_align,'%d'% (cv2.mean(img[  rect[0]:rect[1] , rect[2]:rect[3] ])[0]), (rect[2]+2, rect[0] + (boxH*2)//3),cv2.FONT_HERSHEY_SIMPLEX, 0.6,CLR_BLACK,2)
+        #if(shifted):
+            #cv2.putText(final_align,'s%s'% (shift), tuple(s - [template.dims[0]//20,-d[1]//2]),cv2.FONT_HERSHEY_SIMPLEX, TEXT_SIZE,CLR_BLACK,4)
     return final_align
 
 def getPlotImg():
@@ -433,10 +436,12 @@ def getROI(image, filename, noCrop=False, noMarkers=False):
     # Preprocessing the image
     img = image.copy()
     # TODO: need to detect if image is too blurry already! (M1: check crop dimensions b4 resizing; coz it won't be blurry otherwise _/)
-    img = cv2.GaussianBlur(img,(3,3),0)
+    img = cv2.GaussianBlur(img,(5,5),0)
     image_norm = normalize_util(img);
 
-    if(noCrop == False):
+    #if(noCrop == False):
+    #if(noCrop == 1):
+    if(1):
         #Need this resize for arbitrary high res images: before passing to findPage
         if(image_norm.shape[1] > uniform_width*2):
             image_norm = resize_util(image_norm, uniform_width*2)
@@ -506,9 +511,9 @@ def getROI(image, filename, noCrop=False, noMarkers=False):
             pt[0]+=origins[k][0]
             pt[1]+=origins[k][1]
             # print(">>",pt)
-            image_norm = cv2.rectangle(image_norm,tuple(pt),(pt[0]+w,pt[1]+h),(150,150,150),2)
+            image_norm = cv2.rectangle(image_norm,tuple(pt),(pt[0]+w,pt[1]+h),(0,255,0),2)
             # display: 
-            image_eroded_sub = cv2.rectangle(image_eroded_sub,tuple(pt),(pt[0]+w,pt[1]+h),(50,50,50) if ERODE_SUB_OFF else (155,155,155), 4)
+            image_eroded_sub = cv2.rectangle(image_eroded_sub,tuple(pt),(pt[0]+w,pt[1]+h),(50,50,50) if ERODE_SUB_OFF else (0,0,255), 4)
             centres.append([pt[0]+w/2,pt[1]+h/2])
             sumT += maxT
         print("Scale",best_scale)
@@ -814,7 +819,7 @@ def readResponse(squad,image,name,save=None,noAlign=False):
                     # For demonstration purposes-
                     if(QBlock.key=="Int1"):
                         ret = morph_v.copy()
-                        cv2.rectangle(ret,(s[0]+shift-THK,s[1]),(s[0]+shift+THK+d[0],s[1]+d[1]),CLR_WHITE,3)
+                        cv2.rectangle(ret,(s[0]+shift-THK,s[1]),(s[0]+shift+THK+d[0],s[1]+d[1]),(255,255,255),3)
                         appendSaveImg(6,ret)
                     # print(shift, L, R)
                     LW,RW= L > 100, R > 100
@@ -942,15 +947,15 @@ def readResponse(squad,image,name,save=None,noAlign=False):
                     #         break;
 
                     if (detected):
-                        cv2.rectangle(final_marked,(int(x+boxW/12),int(y+boxH/12)),(int(x+boxW-boxW/12),int(y+boxH-boxH/12)), CLR_DARK_GRAY, 3)
+                        cv2.rectangle(final_marked,(int(x+boxW/12),int(y+boxH/12)),(int(x+boxW-boxW/12),int(y+boxH-boxH/12)), (0,255,0), 3)
                     else:
-                        cv2.rectangle(final_marked,(int(x+boxW/10),int(y+boxH/10)),(int(x+boxW-boxW/10),int(y+boxH-boxH/10)), CLR_GRAY,-1)
+                        cv2.rectangle(final_marked,(int(x+boxW/10),int(y+boxH/10)),(int(x+boxW-boxW/10),int(y+boxH-boxH/10)), (0,0,255),-1)
 
                     # TODO Make this part useful! (Abstract visualizer to check status)
                     if (detected):
                         q = pt.qNo
                         val = str(pt.val)
-                        cv2.putText(final_marked,val,(x,y),cv2.FONT_HERSHEY_SIMPLEX, TEXT_SIZE,(20,20,10),int(1+3.5*TEXT_SIZE))
+                        #cv2.putText(final_marked,val,(x,y),cv2.FONT_HERSHEY_SIMPLEX, TEXT_SIZE,(20,20,10),int(1+3.5*TEXT_SIZE))
                         # Only send rolls multi-marked in the directory
                         multimarkedL = q in OMRresponse
                         multimarked = multimarkedL or multimarked

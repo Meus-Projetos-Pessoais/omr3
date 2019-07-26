@@ -1,0 +1,18 @@
+{
+  "Dimensions": [300, 500 ],
+  "BubbleDimensions": [20, 20],
+  "Concatenations" : {},
+  
+  "Singles" : ["q1","q2","q3","q4","q5","q6","q7","q8","q9","q10","q11","q12","q13","q14","q15"],
+  "MCQBlock1": {
+    "qType": "QTYPE_MCQ5",
+    "orig": [65, 60],
+    "qNos": [
+      [
+        ["q1","q2","q3","q4","q5","q6","q7","q8","q9","q10","q11","q12","q13","q14","q15"],
+      ]
+    ],  
+    "gaps" : [41, 52],
+    "bigGaps" : [30, 30]
+  }
+}

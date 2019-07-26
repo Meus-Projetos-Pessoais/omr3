@@ -9,10 +9,27 @@ https://github.com/Udayraj123
 """
 Constants
 """
-display_height = int(480)
-display_width  = int(640)
+
+#dim =  (1595,556)
+#display_height = int(556)
+#display_width  = int(1595)
+#windowWidth = 1595
+#windowHeight = 556
+
+#display_height = int(720)
+#display_width  = int(1280)
+#windowWidth = 1280
+#windowHeight = 720
+
+#display_height = int(480)
+#display_width  = int(640)
+
+display_height = int(768)
+display_width  = int(1024)
 windowWidth = 1280
 windowHeight = 720
+
+
 
 saveMarked = 1
 showimglvl = 2
@@ -62,8 +79,12 @@ uniform_width = int(1000 / 1.5)
 # Original dims are about (3527, 2494)
 
 ## Any input images should be resized to this--
-uniform_width_hd = int(uniform_width*1.5)
-uniform_height_hd = int(uniform_height*1.5)
+#uniform_width_hd = int(uniform_width*1.5)
+#uniform_height_hd = int(uniform_height*1.5)
+
+uniform_width_hd = int(uniform_width*1)
+uniform_height_hd = int(uniform_height*1)
+
 
 TEXT_SIZE=0.95
 CLR_BLACK = (50,150,150)
