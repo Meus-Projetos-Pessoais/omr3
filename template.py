@@ -6,6 +6,7 @@ https://github.com/Udayraj123
 
 """
 import cv2
+import os
 import json
 import numpy as np
 from globals import *
@@ -127,31 +128,29 @@ def genQBlock(bubbleDims, QBlockDims, key, orig, qNos, gaps, vals, qType, orient
 
 def genGrid(bubbleDims, key, qType, orig, bigGaps, gaps, qNos, vals, orient='V'):
     """
-    Entrada (diretamente passável dos parâmetros JSON):
-    bubbleDims - dimesions do único QBox
-    ponto de origem
-    qNos - uma matriz de tuplas qNos (veja abaixo) que se alinham com a dimensão da grande grade (gridDims extraídos daqui)
-    
-    
-     - (bigGapX, bigGapY) são as lacunas entre os blocos
-    lacunas - (gapX, gapY) são as lacunas entre linhas e cols em um bloco
-    vals - uma matriz 1D de valores de cada alternativa para uma pergunta
-    orient - A maneira de organizar os vals (vertical ou horizontal)
+    Input(Directly passable from JSON parameters):
+    bubbleDims - dimesions of single QBox
+    orig- start point
+    qNos - an array of qNos tuples(see below) that align with dimension of the big grid (gridDims extracted from here)
+    bigGaps - (bigGapX,bigGapY) are the gaps between blocks
+    gaps - (gapX,gapY) are the gaps between rows and cols in a block
+    vals - a 1D array of values of each alternative for a question
+    orient - The way of arranging the vals (vertical or horizontal)
 
-    Saída:
-    // Retorna uma matriz de objetos Q (tendo seus pontos) organizados em uma grade retangular
-    Retorna a grade de objetos QBlock
+    Output:
+    // Returns an array of Q objects (having their points) arranged in a rectangular grid
+    Returns grid of QBlock objects
 
-                                00 00 00 00
-   Q1 1 2 3 4 1 2 3 4 11 11 11 11
-   Q2 1 2 3 4 1 2 3 4 22 22 22 22 1234567
-   Q3 1 2 3 4 1 2 3 4 33 33 33 33 1234567
-                                44 44 44 44
-                            , 55 55 55 55, 1234567 e muitas mais possibilidades!
-   Q7 1 2 3 4 1 2 3 4 66 66 66 66 1234567
-   Q8 1 2 3 4 1 2 3 4 77 77 77 77
-   Q9 1 2 3 4 1 2 3 4 88 88 88 88
-                                99 99 99 99
+                                00    00    00    00
+   Q1   1 2 3 4    1 2 3 4      11    11    11    11
+   Q2   1 2 3 4    1 2 3 4      22    22    22    22         1234567
+   Q3   1 2 3 4    1 2 3 4      33    33    33    33         1234567
+                                44    44    44    44
+                            ,   55    55    55    55    ,    1234567                       and many more possibilities!
+   Q7   1 2 3 4    1 2 3 4      66    66    66    66         1234567
+   Q8   1 2 3 4    1 2 3 4      77    77    77    77
+   Q9   1 2 3 4    1 2 3 4      88    88    88    88
+                                99    99    99    99
 
 TODO: Update this part, add more examples like-
     Q1  1 2 3 4
@@ -261,10 +260,14 @@ def read_template(filename):
         return json.load(f)
 
 
-templJSON={
-#'J' : read_template("inputs/J_template.json"),
-'H' : read_template("inputs/H_template.json")
-}
+templJSON={}
+for squad in ["J", "H"]:
+    TEMPLATE_FILE = "inputs/"+squad+"_template.json";
+    if(os.path.exists(TEMPLATE_FILE)):
+        templJSON[squad] = read_template(TEMPLATE_FILE)
+if(len(templJSON.keys()) == 0):
+    print("Error: No template files present at 'inputs/'")
+    exit(0)
 TEMPLATES={}
 
 for squad in templJSON.keys():

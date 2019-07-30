@@ -47,7 +47,7 @@ for _dir in [manualDir,resultDir]:
     else:
         print('Present : '+_dir)
 
-for _dir in [multiMarkedPath,errorPath,badRollsPath]:
+for _dir in [multiMarkedDir,errorsDir,badRollsDir]:
     if(not os.path.exists(_dir)):
         print('Created : '+ _dir)
         os.makedirs(_dir)
@@ -59,9 +59,9 @@ for _dir in [multiMarkedPath,errorPath,badRollsPath]:
 
 # In[64]:
 def waitQ():
-    while(cv2.waitKey(1)& 0xFF != ord('q')):pass
+    ESC_KEY = 27
+    while(cv2.waitKey(1)& 0xFF not in [ord('q'), ESC_KEY]):pass
     cv2.destroyAllWindows()
-    exit()
 
 def normalize_util(img, alpha=0, beta=255):
     return cv2.normalize(img, alpha, beta, norm_type=cv2.NORM_MINMAX)#, dtype=cv2.CV_32F)
@@ -88,16 +88,20 @@ def resize_util_h(img, u_height, u_width=None):
 
 ### Image Template Part ###
 # TODO : Create class to put these into 
-marker = cv2.imread('inputs/omr_marker.jpg',cv2.IMREAD_GRAYSCALE) #,cv2.CV_8UC1/IMREAD_COLOR/UNCHANGED
-marker = resize_util(marker, int(uniform_width/templ_scale_fac))
-marker = cv2.GaussianBlur(marker, (3,3), 0)
-#marker = cv2.normalize(marker, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-# marker_eroded_sub = marker-cv2.erode(marker,None)
-marker_eroded_sub = marker - cv2.erode(marker, kernel=np.ones((5,5)),iterations=5)
-# lonmarkerinv = cv2.imread('inputs/omr_autorotate.jpg',cv2.IMREAD_GRAYSCALE)
-# lonmarkerinv = imutils.rotate_bound(lonmarkerinv,angle=180)
-# lonmarkerinv = imutils.resize(lonmarkerinv,height=int(lonmarkerinv.shape[1]*0.75))
-# cv2.imwrite('inputs/lonmarker-inv-resized.jpg',lonmarkerinv)
+MARKER_PATH = 'inputs/omr_marker.jpg'
+marker = cv2.imread(MARKER_PATH,cv2.IMREAD_GRAYSCALE) #,cv2.CV_8UC1/IMREAD_COLOR/UNCHANGED
+marker_eroded_sub = None
+if(marker is not None):
+    print("Found marker at:",MARKER_PATH,"Shape:", marker.shape)
+    marker = resize_util(marker, int(uniform_width/templ_scale_fac))
+    marker = cv2.GaussianBlur(marker, (5, 5), 0)
+    marker = cv2.normalize(marker, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+    # marker_eroded_sub = marker-cv2.erode(marker,None)
+    marker_eroded_sub = marker - cv2.erode(marker, kernel=np.ones((5,5)),iterations=5)
+    # lonmarkerinv = cv2.imread('inputs/omr_autorotate.jpg',cv2.IMREAD_GRAYSCALE)
+    # lonmarkerinv = imutils.rotate_bound(lonmarkerinv,angle=180)
+    # lonmarkerinv = imutils.resize(lonmarkerinv,height=int(lonmarkerinv.shape[1]*0.75))
+    # cv2.imwrite('inputs/lonmarker-inv-resized.jpg',lonmarkerinv)
 ### //Image Template Part ###
 
 def show(name,orig,pause=1,resize=False,resetpos=None):
@@ -110,8 +114,6 @@ def show(name,orig,pause=1,resize=False,resetpos=None):
     origDim = orig.shape[:2]
     img = resize_util(orig,display_width,display_height) if resize else orig
     cv2.imshow(name,img)
-    #plt.imshow(img)
-    #plt.show()
     if(resetpos):
         windowX=resetpos[0]
         windowY=resetpos[1]
@@ -133,6 +135,7 @@ def show(name,orig,pause=1,resize=False,resetpos=None):
         windowX += w
 
     if(pause):
+        print("Showing '"+name+"'\n\tPress Q to continue or Press Ctrl+C in terminal to exit")
         waitQ()
         
 
@@ -142,7 +145,7 @@ def putLabel(img,label, size):
     pos = (int(scale*80), int(scale*30))
     clr = (255 - bgVal,)*3
     img[(pos[1]-size*30):(pos[1]+size*2), : ] = bgVal
-    #cv2.putText(img,label,pos,cv2.FONT_HERSHEY_SIMPLEX, size, clr, 3)
+    cv2.putText(img,label,pos,cv2.FONT_HERSHEY_SIMPLEX, size, clr, 3)
 
 def drawTemplateLayout(img, template, shifted=True, draw_qvals=False, border=-1):
     img = resize_util(img,template.dims[0],template.dims[1])
@@ -152,18 +155,18 @@ def drawTemplateLayout(img, template, shifted=True, draw_qvals=False, border=-1)
         s,d = QBlock.orig, QBlock.dims
         shift = QBlock.shift
         if(shifted):
-            cv2.rectangle(final_align,(s[0]+shift,s[1]),(s[0]+shift+d[0],s[1]+d[1]),(0,255,0),3)
+            cv2.rectangle(final_align,(s[0]+shift,s[1]),(s[0]+shift+d[0],s[1]+d[1]),CLR_BLACK,3)
         else:
-            cv2.rectangle(final_align,(s[0],s[1]),(s[0]+d[0],s[1]+d[1]),(0,255,0),3)
+            cv2.rectangle(final_align,(s[0],s[1]),(s[0]+d[0],s[1]+d[1]),CLR_BLACK,3)
         for qStrip, qBoxPts in QBlock.traverse_pts:
             for pt in qBoxPts:
                 x,y = (pt.x + QBlock.shift,pt.y) if shifted else (pt.x,pt.y)
-                cv2.rectangle(final_align,(int(x+boxW/10),int(y+boxH/10)),(int(x+boxW-boxW/10),int(y+boxH-boxH/10)), (0,0,255),border)
+                cv2.rectangle(final_align,(int(x+boxW/10),int(y+boxH/10)),(int(x+boxW-boxW/10),int(y+boxH-boxH/10)), CLR_DARK_GRAY,border)
                 if(draw_qvals):
                     rect = [y,y+boxH,x,x+boxW]
-                    #cv2.putText(final_align,'%d'% (cv2.mean(img[  rect[0]:rect[1] , rect[2]:rect[3] ])[0]), (rect[2]+2, rect[0] + (boxH*2)//3),cv2.FONT_HERSHEY_SIMPLEX, 0.6,CLR_BLACK,2)
-        #if(shifted):
-            #cv2.putText(final_align,'s%s'% (shift), tuple(s - [template.dims[0]//20,-d[1]//2]),cv2.FONT_HERSHEY_SIMPLEX, TEXT_SIZE,CLR_BLACK,4)
+                    cv2.putText(final_align,'%d'% (cv2.mean(img[  rect[0]:rect[1] , rect[2]:rect[3] ])[0]), (rect[2]+2, rect[0] + (boxH*2)//3),cv2.FONT_HERSHEY_SIMPLEX, 0.6,CLR_BLACK,2)
+        if(shifted):
+            cv2.putText(final_align,'s%s'% (shift), tuple(s - [template.dims[0]//20,-d[1]//2]),cv2.FONT_HERSHEY_SIMPLEX, TEXT_SIZE,CLR_BLACK,4)
     return final_align
 
 def getPlotImg():
@@ -388,7 +391,7 @@ def getBestMatch(image_eroded_sub):
             best_scale, allMaxT = s, maxT
 
     if(allMaxT < thresholdCircle):
-        print("Warnning: Template matching too low! Should pass --noCrop in command?")
+        print("Warnning: Template matching too low! Should pass --noCropping in command?")
         if(showimglvl>=1):
             show("res",res,1,0)
 
@@ -412,7 +415,7 @@ thresholdCircles=[]
 badThresholds=[]
 veryBadPoints=[]
 
-def getROI(image, filename, noCrop=False, noMarkers=False):
+def getROI(image, filename, noCropping=False, noMarkers=False):
     global clahe, marker_eroded_sub
     for i in range(saveimglvl):
         resetSaveImg(i+1)
@@ -428,29 +431,27 @@ def getROI(image, filename, noCrop=False, noMarkers=False):
             Check roll field morphed 
     """
 
-    # TODO: (remove noCrop bool) Automate the case of close up scan(incorrect page)-
-    # ^Note: App rejects noCrops along with others
+    # TODO: (remove noCropping bool) Automate the case of close up scan(incorrect page)-
+    # ^Note: App rejects noCroppings along with others
 
     # image = resize_util(image, uniform_width, uniform_height)
 
     # Preprocessing the image
     img = image.copy()
     # TODO: need to detect if image is too blurry already! (M1: check crop dimensions b4 resizing; coz it won't be blurry otherwise _/)
-    img = cv2.GaussianBlur(img,(5,5),0)
+    img = cv2.GaussianBlur(img,(3,3),0)
     image_norm = normalize_util(img);
 
-    #if(noCrop == False):
-    #if(noCrop == 1):
-    if(1):
+    if(noCropping == False):
         #Need this resize for arbitrary high res images: before passing to findPage
         if(image_norm.shape[1] > uniform_width*2):
             image_norm = resize_util(image_norm, uniform_width*2)
         sheet = findPage(image_norm)
         if sheet==[]:
-            print("Error: Paper boundary not found! Should pass --noCrop in command?")
+            print("Error: Paper boundary not found! Should pass --noCropping in command?")
             return None
         else:
-            print("Found page boundaries: ", sheet.tolist())
+            print("Found page corners: ", sheet.tolist())
 
         # Warp layer 1
         image_norm = four_point_transform(image_norm, sheet)
@@ -493,14 +494,14 @@ def getROI(image, filename, noCrop=False, noMarkers=False):
         h,w=templ.shape[:2]
         centres = []
         sumT, maxT = 0, 0
-        print("Matching Marker:", end=" ")
+        print("Matching Marker:\t", end=" ")
         for k in range(0,4):
             res = cv2.matchTemplate(quads[k],templ,cv2.TM_CCOEFF_NORMED)
             maxT = res.max()
             print("Q"+str(k+1)+": maxT", round(maxT,3), end="\t")
             if(maxT < thresholdCircle or abs(allMaxT-maxT) >= thresholdVar):
                 # Warning - code will stop in the middle. Keep Threshold low to avoid.
-                print(filename,"\nError: No circle found in Quad",k+1, "\n\tthresholdVar", thresholdVar, "maxT", maxT,"allMaxT",allMaxT, "Should pass noCrop = False?")
+                print(filename,"\nError: No circle found in Quad",k+1, "\n\tthresholdVar", thresholdVar, "maxT", maxT,"allMaxT",allMaxT, "Should you Not pass --noCropping?")
                 if(showimglvl>=1):
                     show("no_pts_"+filename,image_eroded_sub,0)
                     show("res_Q"+str(k+1),res,1)
@@ -511,9 +512,9 @@ def getROI(image, filename, noCrop=False, noMarkers=False):
             pt[0]+=origins[k][0]
             pt[1]+=origins[k][1]
             # print(">>",pt)
-            image_norm = cv2.rectangle(image_norm,tuple(pt),(pt[0]+w,pt[1]+h),(0,255,0),2)
+            image_norm = cv2.rectangle(image_norm,tuple(pt),(pt[0]+w,pt[1]+h),(150,150,150),2)
             # display: 
-            image_eroded_sub = cv2.rectangle(image_eroded_sub,tuple(pt),(pt[0]+w,pt[1]+h),(50,50,50) if ERODE_SUB_OFF else (0,0,255), 4)
+            image_eroded_sub = cv2.rectangle(image_eroded_sub,tuple(pt),(pt[0]+w,pt[1]+h),(50,50,50) if ERODE_SUB_OFF else (155,155,155), 4)
             centres.append([pt[0]+w/2,pt[1]+h/2])
             sumT += maxT
         print("Scale",best_scale)
@@ -714,7 +715,7 @@ def saveImg(path, final_marked):
     print('Saving Image to '+path)
     cv2.imwrite(path,final_marked)
 
-def readResponse(squad,image,name,save=None,noAlign=False):
+def readResponse(squad,image,name,savedir=None,noAlign=False):
     global clahe
     TEMPLATE = TEMPLATES[squad]
     try:
@@ -819,7 +820,7 @@ def readResponse(squad,image,name,save=None,noAlign=False):
                     # For demonstration purposes-
                     if(QBlock.key=="Int1"):
                         ret = morph_v.copy()
-                        cv2.rectangle(ret,(s[0]+shift-THK,s[1]),(s[0]+shift+THK+d[0],s[1]+d[1]),(255,255,255),3)
+                        cv2.rectangle(ret,(s[0]+shift-THK,s[1]),(s[0]+shift+THK+d[0],s[1]+d[1]),CLR_WHITE,3)
                         appendSaveImg(6,ret)
                     # print(shift, L, R)
                     LW,RW= L > 100, R > 100
@@ -883,7 +884,7 @@ def readResponse(squad,image,name,save=None,noAlign=False):
         globalTHR, j_low, j_high = getGlobalThreshold(allQVals)#, "Mean Intensity Histogram", plotShow=False, sortInPlot=True)
         
         # TODO colorama
-        print("Thresholding: globalTHR: ",round(globalTHR,2),"\tglobalStdTHR: ",round(globalStdTHR,2),"\t(Looks like a Xeroxed OMR)" if(globalTHR == 255) else "")
+        print("Thresholding:\t globalTHR: ",round(globalTHR,2),"\tglobalStdTHR: ",round(globalStdTHR,2),"\t(Looks like a Xeroxed OMR)" if(globalTHR == 255) else "")
         # plt.show()
         # hist = getPlotImg()
         # show("StdHist", hist, 0, 1)
@@ -947,15 +948,14 @@ def readResponse(squad,image,name,save=None,noAlign=False):
                     #         break;
 
                     if (detected):
-                        cv2.rectangle(final_marked,(int(x+boxW/12),int(y+boxH/12)),(int(x+boxW-boxW/12),int(y+boxH-boxH/12)), (0,255,0), 3)
+                        cv2.rectangle(final_marked,(int(x+boxW/12),int(y+boxH/12)),(int(x+boxW-boxW/12),int(y+boxH-boxH/12)), CLR_DARK_GRAY, 3)
                     else:
-                        cv2.rectangle(final_marked,(int(x+boxW/10),int(y+boxH/10)),(int(x+boxW-boxW/10),int(y+boxH-boxH/10)), (0,0,255),-1)
+                        cv2.rectangle(final_marked,(int(x+boxW/10),int(y+boxH/10)),(int(x+boxW-boxW/10),int(y+boxH-boxH/10)), CLR_GRAY,-1)
 
                     # TODO Make this part useful! (Abstract visualizer to check status)
                     if (detected):
-                        q = pt.qNo
-                        val = str(pt.val)
-                        #cv2.putText(final_marked,val,(x,y),cv2.FONT_HERSHEY_SIMPLEX, TEXT_SIZE,(20,20,10),int(1+3.5*TEXT_SIZE))
+                        q, val = pt.qNo, str(pt.val)
+                        cv2.putText(final_marked,val,(x,y),cv2.FONT_HERSHEY_SIMPLEX, TEXT_SIZE,(20,20,10),int(1+3.5*TEXT_SIZE))
                         # Only send rolls multi-marked in the directory
                         multimarkedL = q in OMRresponse
                         multimarked = multimarkedL or multimarked
@@ -1004,31 +1004,27 @@ def readResponse(squad,image,name,save=None,noAlign=False):
             plt.tight_layout(pad=0.5)
             plt.show()
 
-            # TODO: refactor "type(save) != type(None) "
-        if (saveMarked and type(save) != type(None) ):
-            if(multiroll):
-                save = save+'_MULTI_/'
-            # saveImg(save+'Marked_'+name, final_marked)
-            saveImg(save+name, final_marked)
-
         if(showimglvl>=3 and final_align is not None):
             final_align = resize_util_h(final_align,int(display_height))
             show("Template Alignment Adjustment", final_align, 0, 0)# [final_align.shape[1],0])
+        
+        # TODO: refactor "type(savedir) != type(None) "
+        if (saveMarked and type(savedir) != type(None) ):
+            if(multiroll):
+                savedir = savedir+'_MULTI_/'
+            saveImg(savedir+name, final_marked)
+
         if(showimglvl>=1):
             # final_align = resize_util_h(final_align,int(display_height))
             # show("Final Alignment : "+name,final_align,0,0)
-            final_marked = resize_util_h(final_marked,int(display_height*1.3))
-            show("Final Marked Bubbles : "+name,final_marked,1,1)
+            show("Final Marked Bubbles : "+name,resize_util_h(final_marked,int(display_height*1.3)),1,1)
 
         appendSaveImg(2,final_marked)
 
         # saveImgList[3] = [hist, final_marked]
 
-        # to show img
-        # save = None 
-
         for i in range(saveimglvl):
-            saveOrShowStacks(i+1, name, save)
+            saveOrShowStacks(i+1, name, savedir)
 
         return OMRresponse,final_marked,multimarked,multiroll
 
@@ -1038,13 +1034,13 @@ def readResponse(squad,image,name,save=None,noAlign=False):
         print("Error from readResponse: ",e)
         print(exc_type, fname, exc_tb.tb_lineno)
 
-def saveOrShowStacks(key, name, save=None,pause=1):
+def saveOrShowStacks(key, name, savedir=None,pause=1):
     global saveImgList
     if(saveimglvl >= int(key) and saveImgList[key]!=[]):
         result = np.hstack(tuple([resize_util_h(img,uniform_height) for img in saveImgList[key]]))
         result = resize_util(result,min(len(saveImgList[key])*uniform_width//3,int(uniform_width*2.5)))
-        if (type(save) != type(None)):
-            saveImg(save+'stack/'+name+'_'+str(key)+'_stack.jpg', result)
+        if (type(savedir) != type(None)):
+            saveImg(savedir+'stack/'+name+'_'+str(key)+'_stack.jpg', result)
         else:
             show(name+'_'+str(key),result,pause,0)
             

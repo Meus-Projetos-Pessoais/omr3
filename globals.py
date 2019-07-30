@@ -25,11 +25,14 @@ Constants
 #display_width  = int(640)
 
 display_height = int(768)
-display_width  = int(1024)
+display_width  = int(1595)
 windowWidth = 1280
 windowHeight = 720
 
-
+#display_height = int(480)
+#display_width  = int(640)
+#windowWidth = 1280
+#windowHeight = 720
 
 saveMarked = 1
 showimglvl = 2
@@ -79,12 +82,8 @@ uniform_width = int(1000 / 1.5)
 # Original dims are about (3527, 2494)
 
 ## Any input images should be resized to this--
-#uniform_width_hd = int(uniform_width*1.5)
-#uniform_height_hd = int(uniform_height*1.5)
-
-uniform_width_hd = int(uniform_width*1)
-uniform_height_hd = int(uniform_height*1)
-
+uniform_width_hd = int(uniform_width*1.5)
+uniform_height_hd = int(uniform_height*1.5)
 
 TEXT_SIZE=0.95
 CLR_BLACK = (50,150,150)
@@ -99,9 +98,9 @@ OMR_INPUT_DIR ='inputs/OMR_Files/'
 saveMarkedDir='outputs/CheckedOMRs/' 
 resultDir='outputs/Results/'
 manualDir='outputs/Manual/'
-errorPath=manualDir+'ErrorFiles/'
-badRollsPath=manualDir+'BadRollNosFiles/'
-multiMarkedPath=manualDir+'MultiMarkedFiles/'
+errorsDir=manualDir+'ErrorFiles/'
+badRollsDir=manualDir+'BadRollNosFiles/'
+multiMarkedDir=manualDir+'MultiMarkedFiles/'
 
 
 """
@@ -117,21 +116,28 @@ windowX,windowY = 0,0
 # TODO: move to template or similar json
 Answers={
 	'J':{
-		'q1': ['B'],'q2':['B'],'q3':['B'],'q4': ['C'],'q5': ['0','00'],'q6': ['0','00'],'q7': ['4','04'],
-		'q8': ['9','09'],    'q9': ['11','11'],    'q10': ['C'],'q11': ['C'],'q12': ['B'],'q13': ['C'],
-	'q14': ['C'],'q15': ['B'],'q16': ['C'],'q17': ['BONUS'],'q18': ['A'],'q19': ['C'],'q20': ['B']},
+		'q1': ['A'],'q2':['A'],'q3':['A'],'q4': ['A'],'q5': ['A'],'q6': ['A'],'q7': ['A'],
+		'q8': ['A'],    'q9': ['11','11'],    'q10': ['A'],'q11': ['A'],'q12': ['A'],'q13': ['A'],
+	'q14': ['A'],'q15': ['A'],'q16': ['A'],'q17': ['A'],'q18': ['A'],'q19': ['A'],'q20': ['A']},
+	
+	
 	'H':{
-		'q1': ['B'],'q2':['BONUS'],'q3':['A'],'q4': ['B'],'q5': ['A'],'q6': ['B'],'q7': ['B'],
-		'q8': ['C'],    'q9': ['4','04'],'q10': ['4','04'],'q11': ['5','05'],'q12': ['1','01'],'q13': ['28'],
-	'q14': ['C'],'q15': ['B'],'q16': ['C'],'q17': ['C'],'q18': ['C'],'q19': ['B'],'q20': ['C']},
+		'q1': ['A'],'q2':['A'],'q3':['A'],'q4': ['A'],'q5': ['A'],'q6': ['A'],'q7': ['A'],
+		'q8': ['A'],    'q9': ['A'],'q10': ['A'],'q11': ['5','05'],'q12': ['1','01'],'q13': ['28'],
+	'q14': ['A'],'q15': ['A'],'q16': ['A'],'q17': ['A'],'q18': ['A'],'q19': ['A'],'q20': ['A']},
+	
+	
 	'JK':{
-		'q1': ['B'],'q2':['B'],'q3':['B'],'q4': ['C'],'q5': ['0','00'],'q6': ['0','00'],'q7': ['4','04'],
-		'q8': ['9','09'],    'q9': ['11','11'],    'q10': ['C'],'q11': ['C'],'q12': ['B'],'q13': ['C'],
-	'q14': ['C'],'q15': ['B'],'q16': ['C'],'q17': ['BONUS'],'q18': ['A'],'q19': ['C'],'q20': ['B']},
+		'q1': ['A'],'q2':['A'],'q3':['A'],'q4': ['A'],'q5': ['A'],'q6': ['A'],'q7': ['A'],
+		'q8': ['A'],    'q9': ['11','11'],    'q10': ['A'],'q11': ['A'],'q12': ['A'],'q13': ['A'],
+	'q14': ['A'],'q15': ['A'],'q16': ['A'],'q17': ['A'],'q18': ['A'],'q19': ['A'],'q20': ['A']},
+	
+	
+	
 	'HK':{
-		'q1': ['B'],'q2':['BONUS'],'q3':['A'],'q4': ['B'],'q5': ['B'],'q6': ['B'],'q7': ['B'],
-		'q8': ['C'],    'q9': ['4','04'],'q10': ['4','04'],'q11': ['5','05'],'q12': ['1','01'],'q13': ['28'],
-	'q14': ['C'],'q15': ['B'],'q16': ['C'],'q17': ['C'],'q18': ['C'],'q19': ['B'],'q20': ['C']},
+		'q1': ['A'],'q2':['A'],'q3':['A'],'q4': ['A'],'q5': ['A'],'q6': ['A'],'q7': ['A'],
+		'q8': ['A'],    'q9': ['A'],'q10': ['A'],'q11': ['5','05'],'q12': ['1','01'],'q13': ['28'],
+	'q14': ['A'],'q15': ['A'],'q16': ['A'],'q17': ['A'],'q18': ['A'],'q19': ['A'],'q20': ['A']},
 }
 
 # Fibo is across the sections - Q4,5,6,7,13,
